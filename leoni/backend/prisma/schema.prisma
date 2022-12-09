@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url = env("DATABASE_URL")
+}
+
+enum Role {
+  Administrateur
+  Utilisateur
+}
+
+enum status {
+  En_attente
+  Accepte
+  Refuse
+}
+
+model User {
+  id             Int                    @id @default(autoincrement())
+  matricule      String                 @unique
+  email          String                 @unique
+  nom            String?
+  prenom         String?
+  mdp            String
+  Role           Role                   @default(Utilisateur)
+  fonction       Fonction?              @relation(fields: [fonctionId], references: [id])
+  fonctionId     Int?
+  service        Service?               @relation(fields: [serviceId], references: [id])
+  serviceId      Int?
+  sortiepersonel Sortie_bien_personel[]
+  sortiesociete  Sortie_bien_societe[]
+  rebuts         Rebut[]
+}
+
+model Fonction {
+  id          Int    @id @default(autoincrement())
+  designation String @unique
+  user        User[]
+}
+
+model Service {
+  id           Int    @id @default(autoincrement())
+  designation  String @unique
+  nbr_employee Int?
+  user         User[]
+}
+
+model Sortie_bien_personel {
+  id                  Int         @id @default(autoincrement())
+  nature              String
+  quantite            Int
+  destination         String
+  nom_tronsporteur    String
+  prenom_tronsporteur String
+  institue            String
+  typestage           Type_stage? @relation(fields: [type_stage], references: [id])
+  type_stage          Int
+  date_stage          DateTime
+  date_debut          DateTime
+  date_fin            DateTime
+  etat                status      @default(En_attente)
+  user                User?       @relation(fields: [userId], references: [id])
+  userId              Int
+}
+
+model Type_stage {
+  id        Int                    @id @default(autoincrement())
+  TypeStage String                 @unique
+  user      Sortie_bien_personel[]
+}
+
+model Sortie_bien_societe {
+  id                 Int           @id @default(autoincrement())
+  quantite           Int
+  destination        String
+  tronsporteur       String
+  typesortie         Type_sortie   @relation(fields: [type_sortie], references: [id])
+  type_sortie        Int
+  num_mise_rebut     String
+  date_sortie        DateTime
+  date_retour_prevue DateTime
+  responsable_retour String
+  nature_bien        String
+  etat             status        @default(En_attente)
+  user               User?         @relation(fields: [userId], references: [id])
+  userId             Int
+  materielles        Materielles[]
+}
+
+model Type_sortie {
+  id         Int                   @id @default(autoincrement())
+  TypeSortie String                @unique
+  sortie     Sortie_bien_societe[]
+}
+
+model Rebut {
+  id                    Int      @id @default(autoincrement())
+  nature_investissement String
+  caracteristiques      String
+  montant_acquisition   String
+  centre_cout           String
+  perte                 String
+  date_acquisition      DateTime
+  date_sortie           DateTime
+  cause_rebut           String
+  etat                status   @default(En_attente)
+  user                  User?    @relation(fields: [userId], references: [id])
+  userId                Int
+}
+
+model Materielles {
+  id        Int                 @id @default(autoincrement())
+  num_imm   String              @unique
+  num_serie String
+  marque    String
+  sortie    Sortie_bien_societe @relation(fields: [sortieId], references: [id])
+  sortieId  Int
+}
